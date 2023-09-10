@@ -1,0 +1,346 @@
+package fifteenpuzzle;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+
+public class Node implements Comparable<Node> {
+    int[][] tiles;
+    private int zeroRow;
+    private int zeroCol;
+    private int gScore;
+    private int hScore;
+    private Node parent;
+    private int size;
+
+    public Node(int[][] tiles) {
+        this.tiles = tiles;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                if (tiles[i][j] == 0) {
+                    zeroRow = i;
+                    zeroCol = j;
+                    break;
+                }
+            }
+        }
+        gScore = 0;
+        hScore = 0;
+        parent = null;
+    }
+    public int getFScore() {
+        return gScore + hScore;
+    }
+    public void setGScore(int gScore) {
+        this.gScore = gScore;
+    }
+    public void setHScore(int hScore) {
+        this.hScore = hScore;
+    }
+    public int getHScore() {
+        return hScore;
+    }
+    public int getGScore() {
+        return gScore;
+    }
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+    public Node getParent() {
+        return parent;
+    }
+    public int[][] getTiles() {
+        return tiles;
+    }
+    public List<Node> getNeighbors() {
+        List<Node> neighbors = new ArrayList<>();
+        int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        for (int[] offset : offsets) {
+            int neighborRow = zeroRow + offset[0];
+            int neighborCol = zeroCol + offset[1];
+            if (neighborRow >= 0 && neighborRow < tiles.length && neighborCol >= 0 && neighborCol < tiles[0].length) {
+                int[][] newTiles = new int[tiles.length][tiles[0].length];
+                for (int i = 0; i < tiles.length; i++) {
+                    System.arraycopy(tiles[i], 0, newTiles[i], 0, tiles[0].length);
+                }
+                newTiles[zeroRow][zeroCol] = newTiles[neighborRow][neighborCol];
+                newTiles[neighborRow][neighborCol] = 0;
+                neighbors.add(new Node(newTiles));
+            }
+        }
+        return neighbors;
+    }
+    @Override
+    public int compareTo(Node other) {
+        return Integer.compare(getFScore(), other.getFScore());
+    }
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Node)) {
+            return false;
+        }
+        Node otherNode = (Node) other;
+        return Arrays.deepEquals(tiles, otherNode.tiles);
+    }
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + tiles.length;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles.length; j++) {
+                result = prime * result + i + j;
+                result = prime * result + tiles[i][j];
+            }
+        }
+        return result;
+    }
+    public int[] findMovedTile(Node prevNode, Node currNode) {
+        for (int i = 0; i < prevNode.tiles.length; i++) {
+            for (int j = 0; j < prevNode.tiles[i].length; j++) {
+                if (prevNode.tiles[i][j] != currNode.tiles[i][j]) {
+                    if (prevNode.tiles[i][j] != 0) {
+                        return new int[]{i, j};
+                    }
+                }
+            }
+        }
+        return new int[]{-1, -1}; // To handle an unlikely case where no moved tile is found
+    }
+
+    public String findMovedDirection(Node prevNode, int[] movedTile) {
+        int[] emptyTile = {prevNode.zeroRow, prevNode.zeroCol};
+        if (emptyTile[0] == movedTile[0]) {
+            if (emptyTile[1] < movedTile[1]) {
+                return "L";
+            } else {
+                return "R";
+            }
+        } else {
+            if (emptyTile[0] < movedTile[0]) {
+                return "U";
+            } else {
+                return "D";
+            }
+        }
+    }
+    public int computeWalkingDistance(Node goalNode) {
+        int walkingDistance = 0;
+        int linearConflict = 0;
+        int misplacedTiles = 0;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                int tile = tiles[i][j];
+                if (tile != 0) {
+                    int goalRow = goalNode.getRow(tile);
+                    int goalCol = goalNode.getCol(tile);
+                    walkingDistance += Math.abs(goalRow - i) + Math.abs(goalCol - j);
+                    if (i != goalRow || j != goalCol){
+                        misplacedTiles++;
+                    }
+                    if (i == goalRow){
+                        for (int k = j + 1; k<tiles.length; k++){
+                            int otherValue = tiles[i][k];
+                            if (otherValue != 0){
+                                int otherGoalCol = (otherValue -1) % tiles.length;
+                                if (goalCol > otherGoalCol && otherGoalCol>j){
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                    if (i == goalCol){
+                        for (int k = i + 1; k<tiles.length; k++){
+                            int otherValue = tiles[k][j];
+                            if (otherValue != 0){
+                                int otherGoalRow = (otherValue -1) % tiles.length;
+                                if (goalRow > otherGoalRow && otherGoalRow>i){
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        return walkingDistance+linearConflict+misplacedTiles;
+    }
+
+
+
+    public int computeMD(Node goalNode) {
+        int manhattanDistance = 0;
+        int linearConflict = 0;
+
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                int tile = tiles[i][j];
+                if (tile != 0) {
+                    int goalRow = goalNode.getRow(tile);
+                    int goalCol = goalNode.getCol(tile);
+
+                    manhattanDistance += Math.abs(goalRow - i) + Math.abs(goalCol - j);
+
+                    // Check for row conflicts
+                    if (i == goalRow) {
+                        for (int k = j + 1; k < tiles.length; k++) {
+                            int otherValue = tiles[i][k];
+                            if (otherValue != 0) {
+                                int otherGoalRow = goalNode.getRow(otherValue);
+                                if (goalRow == otherGoalRow && goalCol > goalNode.getCol(otherValue)) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+
+                    // Check for column conflicts
+                    if (j == goalCol) {
+                        for (int k = i + 1; k < tiles.length; k++) {
+                            int otherValue = tiles[k][j];
+                            if (otherValue != 0) {
+                                int otherGoalCol = goalNode.getCol(otherValue);
+                                if (goalCol == otherGoalCol && goalRow > goalNode.getRow(otherValue)) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return manhattanDistance + linearConflict;
+    }
+
+    public int computeLinearConflict(Node goalNode) {
+        int linearConflict = 0;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                int tile = tiles[i][j];
+                if (tile != 0) {
+                    int goalRow = goalNode.getRow(tile);
+                    int goalCol = goalNode.getCol(tile);
+                    if (i == goalRow) {
+                        for (int k = j + 1; k < tiles[i].length; k++) {
+                            int otherTile = tiles[i][k];
+                            if (otherTile != 0) {
+                                int otherGoalCol = goalNode.getCol(otherTile);
+                                if (otherGoalCol < goalCol && otherGoalCol > j && goalNode.getRow(otherTile) == i) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                    if (j == goalCol) {
+                        for (int k = i + 1; k < tiles.length; k++) {
+                            int otherTile = tiles[k][j];
+                            if (otherTile != 0) {
+                                int otherGoalRow = goalNode.getRow(otherTile);
+                                if (otherGoalRow < goalRow && otherGoalRow > i && goalNode.getCol(otherTile) == j) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return linearConflict;
+    }
+
+    public int computeMisplacedTiles(Node goalNode) {
+        int misplacedTiles = 0;
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                int tile = tiles[i][j];
+                if (tile != 0 && tile != goalNode.tiles[i][j]) {
+                    misplacedTiles++;
+                }
+            }
+        }
+        return misplacedTiles;
+    }
+
+
+    private int getRow(int tile) {
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                if (tiles[i][j] == tile) {
+                    return i;
+                }
+            }
+        }
+        return -1; // Tile not found
+    }
+
+    private int getCol(int tile) {
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                if (tiles[i][j] == tile) {
+                    return j;
+                }
+            }
+        }
+        return -1; // Tile not found
+    }
+    public int computeWeightedHeuristic(Node goalNode) {
+        double weightManhattan = 1.0;
+        double weightLinearConflict = 1.5;
+        double weightMisplacedTiles = 0.1;
+
+        int manhattanDistance = 0;
+        int linearConflict = 0;
+        int misplacedTiles = 0;
+
+        for (int i = 0; i < tiles.length; i++) {
+            for (int j = 0; j < tiles[i].length; j++) {
+                int tile = tiles[i][j];
+                if (tile != 0) {
+                    int goalRow = goalNode.getRow(tile);
+                    int goalCol = goalNode.getCol(tile);
+
+                    manhattanDistance += Math.abs(goalRow - i) + Math.abs(goalCol - j);
+
+                    if (i != goalRow || j != goalCol) {
+                        misplacedTiles++;
+                    }
+
+                    if (i == goalRow) {
+                        for (int k = j + 1; k < tiles.length; k++) {
+                            int otherValue = tiles[i][k];
+                            if (otherValue != 0) {
+                                int otherGoalCol = goalNode.getCol(otherValue);
+                                if (goalCol > otherGoalCol && otherGoalCol > j) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+
+                    if (j == goalCol) {
+                        for (int k = i + 1; k < tiles.length; k++) {
+                            int otherValue = tiles[k][j];
+                            if (otherValue != 0) {
+                                int otherGoalRow = goalNode.getRow(otherValue);
+                                if (goalRow > otherGoalRow && otherGoalRow > i) {
+                                    linearConflict += 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        int combinedHeuristic = (int) Math.round(weightManhattan * manhattanDistance
+                + weightLinearConflict * linearConflict
+                + weightMisplacedTiles * misplacedTiles);
+
+        return combinedHeuristic;
+    }
+
+
+}
