@@ -1,0 +1,197 @@
+package fifteenpuzzle;
+
+import java.io.*;
+import java.lang.invoke.MethodHandles;
+import java.util.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.IOException;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+
+public class Solver {
+	private Node startNode;
+	private Node goalNode;
+	private PriorityQueue<Node> openSet;
+//	private static int numberofNodes;
+	private int sizeOfBoard;
+
+
+	public static int[][] goalTiles(int size) {
+		int[][] goal = new int[size][size];
+		int count = 1;
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				goal[i][j] = count;
+				count++;
+			}
+		}
+		goal[size - 1][size - 1] = 0; // the empty tile is represented by 0
+		return goal;
+	}
+
+	private Pair<int[][], Integer> readTilesFromFile(String filename) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(filename));
+
+		// Read the size of the board from the first line
+		int size = Integer.parseInt(br.readLine().trim());
+
+		// Initialize the board array
+		int[][] board = new int[size][size];
+
+		// Read the remaining lines and populate the board array
+		String line;
+		int row = 0;
+		while ((line = br.readLine()) != null) {
+			String[] tokens = line.trim().split("\\s+");
+			int numTokens = Math.min(size, tokens.length); // Handle incomplete rows
+			for (int col = 0; col < numTokens; col++) {
+				if (tokens[col].equals("")) {
+					board[row][col] = 0; // Use 0 to represent the blank tile
+				} else {
+					board[row][col] = Integer.parseInt(tokens[col]);
+				}
+			}
+			for (int col = numTokens; col < size; col++) {
+				board[row][col] = 0; // Fill incomplete rows with 0s
+			}
+			row++;
+		}
+
+		br.close();
+
+//		String ans = "";
+//		for (int i = 0; i < size; i++) {
+//			ans += num2str(board[i][0]);
+//			for (int j = 1; j < size; j++)
+//				ans += " " + num2str(board[i][j]);
+//			ans += "\n";
+//		}
+//		System.out.println("Initial Board is:\n" + ans);
+
+		return new Pair<>(board, size);
+	}
+
+	private String num2str(int i) {
+		if (i == 0)
+			return "  ";
+		else if (i < 10)
+			return " " + Integer.toString(i);
+		else
+			return Integer.toString(i);
+	}
+
+	private List<Node> reconstructPath(Node current) {
+		List<Node> path = new ArrayList<>();
+		path.add(current);
+		while (current.getParent() != null) {
+			current = current.getParent();
+			path.add(0, current);
+		}
+		return path;
+	}
+	public Solver(String inputFilename) throws IOException {
+		// Read the initial state from the input file
+		Pair<int[][], Integer> initialTilesPair = readTilesFromFile(inputFilename);
+		int[][] initialTiles = initialTilesPair.getFirst();
+		sizeOfBoard = initialTilesPair.getSecond();
+		startNode = new Node(initialTiles);
+		int[][] goalTiles = goalTiles(sizeOfBoard);
+		goalNode = new Node(goalTiles);
+
+		openSet = new PriorityQueue<>(Comparator.comparingInt(Node::getHScore));
+		startNode.setGScore(0);
+		startNode.setHScore(startNode.computeWalkingDistance(goalNode));
+		// Add the start node to the open set
+		openSet.add(startNode);
+	}
+
+	public void solve(String outputFilename) {
+		// Keep track of the number of nodes expanded
+//		int nodesExpanded = 0;
+
+		// Use a HashMap to store the visited nodes
+		Map<Integer, Node> visitedNodes = new HashMap<>();
+
+		while (!openSet.isEmpty()) {
+			// Get the node with the minimum h score from the open set
+			Node current = openSet.poll();
+
+			// Check if the current node is the goal node
+			if (current.equals(goalNode)) {
+				List<Node> path = reconstructPath(current);
+				try (PrintWriter writer = new PrintWriter(outputFilename)) {
+					for (int i = 1; i < path.size(); i++) {
+						Node prevNode = path.get(i - 1);
+						Node currNode = path.get(i);
+						int[] prevTile = goalNode.findMovedTile(prevNode, currNode);
+						String direction = goalNode.findMovedDirection(prevNode, prevTile);
+						writer.println(prevNode.tiles[prevTile[0]][prevTile[1]] + " " + direction);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+//				System.out.println("Nodes expanded: " + nodesExpanded);
+//				numberofNodes = nodesExpanded;
+				return;
+			}
+
+			// Add the current node to the visited nodes
+			visitedNodes.put(current.hashCode(), current);
+
+			// Generate the neighbors of the current node
+			List<Node> neighbors = current.getNeighbors();
+			for (Node neighbor : neighbors) {
+				// Skip the neighbor if it has already been visited
+				if (visitedNodes.containsKey(neighbor.hashCode())) {
+					continue;
+				}
+
+				// Add the neighbor to the open set with its h score as the priority
+				neighbor.setParent(current);
+				neighbor.setGScore(current.getGScore() + 1);
+				neighbor.setHScore(neighbor.computeWalkingDistance(goalNode));
+				openSet.add(neighbor);
+			}
+
+			// Increment the number of nodes expanded
+//			nodesExpanded++;
+		}
+
+		// If we reach here, then there is no solution
+		System.out.println("No solution found");
+	}
+
+
+		public static void main(String[] args) throws IOException {
+		if (args.length < 2) {
+			System.out.println("File names are not specified");
+			System.out.println("usage: java " + MethodHandles.lookup().lookupClass().getName() + " input_file output_file");
+			return;
+		}
+
+		String inputFilename = args[0];
+		String outputFilename = args[1];
+//		long start = System.nanoTime();
+		Solver solver = new Solver(inputFilename);
+		solver.solve(outputFilename);
+//		long end = System.nanoTime();
+//		long time = end - start;
+
+//		double timeInSeconds = time / 1_000_000_000.0;
+//		System.out.println("Running time = " + timeInSeconds + " seconds");
+//
+//		try {
+//			// code to write to file
+//			BufferedWriter writer = new BufferedWriter(new FileWriter("computeWalkingDistance.txt", true));
+//
+//			writer.append(Double.toString(timeInSeconds) + " s    " + numberofNodes +" \n");
+//			writer.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+	}
+}
