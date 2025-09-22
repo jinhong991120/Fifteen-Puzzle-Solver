@@ -17,7 +17,7 @@ A command‑line solver for the classic *n×n sliding puzzle* (default shown as 
 
 ---
 
-## 🔧 Project Structure
+## 3. Project Structure
 
 ```
 src/
@@ -29,7 +29,7 @@ src/
 
 ---
 
-## 🧠 Problem Definition
+## 4. Problem Definition
 
 Given an `n×n` grid containing tiles `1..n²−1` and a single empty space `0`, find a sequence of moves that transforms an initial configuration into the **goal** configuration:
 
@@ -43,7 +43,7 @@ Moves slide a tile **adjacent to the empty space** into that space (up/down/left
 
 ---
 
-## 🚀 Build & Run
+## 5. Build & Run
 
 ### Requirements
 
@@ -66,7 +66,7 @@ java -cp out fifteenpuzzle.Solver <input_file> <output_file>
 
 ---
 
-## 📄 File Formats
+## 6. File Formats
 
 ### Input format
 
@@ -101,7 +101,7 @@ Each line indicates **which numbered tile moved** and **in which direction it sl
 
 ---
 
-## 🔍 Search Algorithm (Current)
+## 7. Search Algorithm (Current)
 
 * **Open set:** Java `PriorityQueue<Node>` ordered by **`h(n)` only** (`Node.getHScore()`)
 * **Visited:** `Map<Integer, Node>` keyed by `Node.hashCode()` to avoid revisiting states
@@ -112,7 +112,7 @@ Each line indicates **which numbered tile moved** and **in which direction it sl
 
 ---
 
-## 📐 Heuristics Implemented
+## 8. Heuristics Implemented
 
 Heuristics estimate distance from a node `s` to the goal `G`.
 
@@ -187,7 +187,7 @@ With an **admissible** heuristic (e.g., Manhattan + Linear Conflict), A\* will r
 
 ---
 
-## ✅ Example
+## 9. Example
 
 Given the input above, run:
 
@@ -199,7 +199,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## ⚙️ Design Notes
+## 10. Design Notes
 
 * `Node.equals(...)` uses deep array equality on tile grids
 * `Node.hashCode()` is consistent with `equals` for use in maps/sets
@@ -208,7 +208,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 🧪 Testing Ideas
+## 11. Testing Ideas
 
 * **Solvability checks:** Add a parity test to reject unsolvable inputs early
 * **Regression seeds:** Keep a folder of known puzzles with expected move counts
@@ -216,7 +216,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 🚧 Known Limitations & Future Work
+## 12. Known Limitations & Future Work
 
 * **Optimality:** GBFS may find a solution quickly but not the fewest moves
 * **Memory:** Large boards can explode in state space; consider IDA\* for 5×5+
@@ -225,12 +225,12 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 📜 License
+## 13. License
 
 Choose a license (e.g., MIT) and add a `LICENSE` file if making the project public.
 
 ---
 
-## 🙌 Acknowledgments
+## 14. Acknowledgments
 
 Classic 15‑puzzle literature and community resources on Manhattan distance, linear conflicts, and A\*.
