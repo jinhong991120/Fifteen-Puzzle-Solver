@@ -1,10 +1,12 @@
 # FifteenPuzzleSolver
 
+## 1. Introduction
+
 A command‑line solver for the classic *n×n sliding puzzle* (default shown as 15‑puzzle). The solver reads an initial board from a file and writes the sequence of moves to reach the goal state.
 
 ---
 
-## ✨ Highlights
+## 2. Highlights
 
 * **Search strategy:** Greedy Best‑First Search (GBFS) over puzzle states
 * **Heuristic (default):** Composite of Manhattan distance, linear conflict, and misplaced tiles (a.k.a. "walking distance" in this codebase)
