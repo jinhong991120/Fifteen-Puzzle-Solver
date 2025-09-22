@@ -162,7 +162,7 @@ Defined in `Node.computeWeightedHeuristic(...)`.
 
 ---
 
-## 🔁 Switching to A\*
+## 9. Switching to A\*
 
 If you want optimal solutions (fewest moves), change the priority queue to order by **`f(n) = g(n) + h(n)`**:
 
@@ -187,7 +187,7 @@ With an **admissible** heuristic (e.g., Manhattan + Linear Conflict), A\* will r
 
 ---
 
-## 9. Example
+## 10. Example
 
 Given the input above, run:
 
@@ -199,7 +199,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 10. Design Notes
+## 11. Design Notes
 
 * `Node.equals(...)` uses deep array equality on tile grids
 * `Node.hashCode()` is consistent with `equals` for use in maps/sets
@@ -208,7 +208,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 11. Testing Ideas
+## 12. Testing Ideas
 
 * **Solvability checks:** Add a parity test to reject unsolvable inputs early
 * **Regression seeds:** Keep a folder of known puzzles with expected move counts
@@ -216,7 +216,7 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 12. Known Limitations & Future Work
+## 13. Known Limitations & Future Work
 
 * **Optimality:** GBFS may find a solution quickly but not the fewest moves
 * **Memory:** Large boards can explode in state space; consider IDA\* for 5×5+
@@ -225,12 +225,12 @@ java -cp out fifteenpuzzle.Solver sample4x4.in moves.out
 
 ---
 
-## 13. License
+## 14. License
 
 Choose a license (e.g., MIT) and add a `LICENSE` file if making the project public.
 
 ---
 
-## 14. Acknowledgments
+## 15. Acknowledgments
 
 Classic 15‑puzzle literature and community resources on Manhattan distance, linear conflicts, and A\*.
